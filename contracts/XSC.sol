@@ -162,7 +162,7 @@ contract XSC {
             }
         }
         if(!flag){
-            revert TokenDoesNotExists(user, device, msg.sender);//Reverte se não existir o token
+            emit TokenDoesNotExists();//Reverte se não existir o token
         }
     }
 
@@ -180,7 +180,7 @@ contract XSC {
                     emit TokenDeleted(Tokens[i].UID, Tokens[i].user, Tokens[i].dev, msg.sender);
                 }
             }if(!flag){
-                revert TokenDoesNotExists(Tokens[i].user, device, msg.sender);
+                emit TokenDoesNotExists();
             }
         }
     }
@@ -199,7 +199,7 @@ contract XSC {
                     emit TokenDeleted(Tokens[i].UID, Tokens[i].user, Tokens[i].dev, msg.sender);
                 }
             }if(!flag){
-                revert TokenDoesNotExists(user, Tokens[i].dev, msg.sender);
+                emit TokenDoesNotExists();
             }
         }
     }
@@ -395,6 +395,9 @@ contract XSC {
     //Exclusão de um Token
     event TokenDeleted(bytes32 UID, address user, address device, address admin);
 
+    //Token não existe
+    event TokenDoesNotExists();
+
     //Exclusão dos mappings usuario-dispositivos de um usuario e por quem
     event UserDeviceAllMappingDeleted(address user, address admin);
 
@@ -415,6 +418,4 @@ contract XSC {
     //O objeto requisitado não existe no sistema
     error objectDoesNotExists(address obj, address sender);
 
-    //Exclusão de um Token
-    error TokenDoesNotExists(address user, address device, address admin);
 }
