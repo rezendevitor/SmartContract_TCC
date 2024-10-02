@@ -33,16 +33,16 @@ contract XSC {
             admins.push(newAdmin); //Add na lista
             emit objectAdded(newAdmin, msg.sender); //Registra a operação
         }else{
-            revert objectAlreadyExists(newAdmin, msg.sender); //Emite o erro
+            revert objectAlreadyExists(); //Emite o erro
         }
     }
 
     function addDevice(address newDevice) public onlyAdmin{
-        if(findInList(newDevice, devices) == -1){//Verifica se já existe
-            devices.push(newDevice);//Add na lista
-            emit objectAdded(newDevice, msg.sender); //Registra a operação 
+        if(findInList(newDevice, devices) == -1){ 
+            devices.push(newDevice); 
+            emit objectAdded(newDevice, msg.sender); 
         }else{
-            revert objectAlreadyExists(newDevice, msg.sender);//Emite o erro
+            revert objectAlreadyExists();
        }
     }
 
@@ -51,7 +51,7 @@ contract XSC {
             users.push(newUser); //Add na lista
         emit objectAdded(newUser, msg.sender); //Registra a operação
         }else{
-            revert objectAlreadyExists(newUser, msg.sender);//Emite o erro
+            revert objectAlreadyExists();//Emite o erro
         }
     }
 
@@ -69,13 +69,14 @@ contract XSC {
                     user_devices[user].push(device);//Cria o mapping
                     emit UserDeviceMappingAdded(user, device, msg.sender);
                 }else{
-                    revert objectAlreadyExists(user_devices[user][uint(cond)], msg.sender);//mapping já existe
+                    revert objectAlreadyExists();//mapping já existe
+                    //revert objectAlreadyExists(user_devices[user][uint(cond)]);//mapping já existe
                 }
             }else{
-                revert objectDoesNotExists(device, msg.sender);//Dispositivo não existe
+                revert objectDoesNotExists();//Dispositivo não existe
             } 
         }else{
-            revert objectDoesNotExists(user, msg.sender);//Usuário não existe
+            revert objectDoesNotExists();//Usuário não existe
         }   
     }
 
@@ -91,19 +92,19 @@ contract XSC {
                 delete admins[uint(i)]; //Deleta se existir
                 emit objectDeleted(admin, msg.sender);
             }else{
-                revert objectDoesNotExists(admin, msg.sender); //Reverte se não existir
+                revert objectDoesNotExists(); //Reverte se não existir
             }   
         }
     }
 
     function delDevice(address device) public onlyAdmin{
-        int i = findInList(device, devices);//Procura o indice
+        int i = findInList(device, devices); // Procura o dispositivo
         if(i >= 0){
-            removeDeviceTokens(device); //remove o acesso
-            delete devices[uint(i)]; //Deleta se existir
+            removeDeviceTokens(device); // Remove os tokens
+            delete devices[uint(i)]; // Remove o dispositivo
             emit objectDeleted(device, msg.sender);
         }else{
-            revert objectDoesNotExists(device, msg.sender);//Reverte se não existir
+            revert objectDoesNotExists(); 
         }   
     }
 
@@ -114,14 +115,14 @@ contract XSC {
             delete users[uint(i)];//Deleta se existir
             emit objectDeleted(user, msg.sender);
         }else{
-            revert objectDoesNotExists(user, msg.sender);//Reverte se não existir
+            revert objectDoesNotExists();//Reverte se não existir
         }   
     }
 
     //Deleta o acesso de um usuario para todos os dispositivos
     function delUserAccess(address user) public onlyAdmin{
         if(findInList(user, users) == -1){//Procura o indice
-            revert objectDoesNotExists(user, msg.sender);//Reverte se não existir
+            revert objectDoesNotExists();//Reverte se não existir
         }else{
             delete user_devices[user];//remove o acesso
             removeUserTokens(user);//remove o acesso
@@ -133,7 +134,7 @@ contract XSC {
     function delUserDeviceAccess(address user, address device) public onlyAdmin{
         bool flag = false;
         if(findInList(user, users) == -1){//Procura o indice
-            revert objectDoesNotExists(user, msg.sender);//Reverte se não existir user
+            revert objectDoesNotExists();//Reverte se não existir user
         }else{
             for(uint i=0; i<user_devices[user].length; i++){
                 if(user_devices[user][i] == device){
@@ -144,7 +145,7 @@ contract XSC {
                 }
             }
             if(!flag){
-                revert objectDoesNotExists(device, msg.sender);//Reverte se não existir device
+                revert objectDoesNotExists();//Reverte se não existir device
             }
         }
     }
@@ -170,7 +171,7 @@ contract XSC {
     function removeDeviceTokens(address device) public onlyAdmin{ 
         bool flag = false;
         if(findInList(device, devices) == -1){
-            revert objectDoesNotExists(device, msg.sender);
+            revert objectDoesNotExists();
         }else{
             uint i;
             for(i=0; i<Tokens.length; i++){
@@ -189,7 +190,7 @@ contract XSC {
     function removeUserTokens(address user) public onlyAdmin{
         bool flag = false;
         if(findInList(user, users) == -1){
-            revert objectDoesNotExists(user, msg.sender);
+            revert objectDoesNotExists();
         }else{
             uint i;
             for(i=0; i<Tokens.length; i++){
@@ -205,43 +206,33 @@ contract XSC {
     }
 
 
-    // D - Autenticação
-    //Requisição de Autenticação
+    // D - Requisição de Autenticação
     function requestAuthentication(address device) public{
-        if(findInList(device, devices) >= 0){
-            //Dispositivo existe
-            if(findInList(msg.sender, users) >= 0){
-                //User existe
-                if(findMapping(device, msg.sender) >= 0){
-                    //Mapping existe
-                    //Emite o evento de autenticação bem-sucedida
-                    emit Authenticated(msg.sender, device);
+        if(findInList(device, devices) >= 0){ // Dispositivo existe
+            if(findInList(msg.sender, users) >= 0){ // Usuário existe
+                if(findMapping(device, msg.sender) >= 0){ // Mapping existe
                     bool tokenCheck = false;
                     for(uint i=0; i<Tokens.length; i++){
-                        if(Tokens[i].dev == device && Tokens[i].user == msg.sender){
-                            // Token já existe
+                        if(Tokens[i].dev == device && Tokens[i].user == msg.sender){ // Token já existe
                             tokenCheck = true;
                         }
                     }
-                    if(!tokenCheck){
-                        //Cria um novo Token
+                    if(!tokenCheck){ // Cria um novo token
                         bytes32 UID = keccak256(abi.encodePacked(device, msg.sender, block.timestamp));
                         Tokens.push(Token(UID, msg.sender, device));
                         emit TokenCreated(UID, msg.sender, device);
                     }else{
                         emit TokenAlreadyExists(msg.sender, device);
                     }
+                    emit Authenticated(msg.sender, device); // Emite o evento de autenticação bem-sucedida
                 }else{
-                    //Emite o evento de autenticação malsucedida - mapping não existe
-                    revert NotAuthenticated(msg.sender);
+                    revert NotAuthenticated(); // Emite o evento de autenticação malsucedida
                 }
             }else{
-                //User não existe
-                revert objectDoesNotExists(msg.sender, msg.sender);
+                revert objectDoesNotExists(); // Usuário não existe
             }
         }else{
-            //Device não existe
-            revert objectDoesNotExists(device, msg.sender);
+            revert objectDoesNotExists(); // Dispositivo não existe
         }
     }
 
@@ -354,7 +345,6 @@ contract XSC {
         return users;        
     }
 
-
     // Modificadores
     //Apenas Admins podem executar certas funções
     modifier onlyAdmin{ //Para verificar o usuário
@@ -371,7 +361,6 @@ contract XSC {
             _; //Continua
         }
     }
-
 
     // Eventos
     //Autenticação bem-sucedida
@@ -407,15 +396,13 @@ contract XSC {
     //Exclusão do mapping de um usuario para um dispositivo
     event UserDeviceOneMappingDeleted(address user, address device, address admin);
 
-
     // Erros
     //Autenticação malsucedida
-    error NotAuthenticated(address user);
+    error NotAuthenticated();
 
     //O objeto a ser criado já existe no sistema
-    error objectAlreadyExists(address obj, address sender);
+    error objectAlreadyExists();
 
     //O objeto requisitado não existe no sistema
-    error objectDoesNotExists(address obj, address sender);
-
+    error objectDoesNotExists();
 }
